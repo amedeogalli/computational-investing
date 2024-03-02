@@ -1,0 +1,37 @@
+# import the needed libraries
+import numpy as np
+import pandas as pd
+import yfinance as yf
+import matplotlib.pyplot as plt
+import matplotlib.ticker as tkr
+
+# download treasuries future price data
+treasury_futures = yf.download("ZN=F")
+
+# compute daily logarithmic returns of future prices
+treasury_futures["log_returns"] = np.log(treasury_futures["Adj Close"]).diff()
+# or, as an alternative, it is possible to use the following code line:
+# treasury_futures["log_returns"] = np.log(treasury_futures["Adj Close"] / treasury_futures["Adj Close"].shift(1))
+
+# define how many bins display in the histogram
+daily_return_max = np.round(treasury_futures["log_returns"].max(),3)
+daily_return_min = np.round(treasury_futures["log_returns"].min(),3)
+number_bins = int((daily_return_max - daily_return_min) * 100)
+
+# plot histogram showing logarithmic returns
+plt.hist(treasury_futures["log_returns"], bins = number_bins, color = "green", label = "Logarithmic returns")
+
+# insert a vertical dotted line for the returns' mean
+plt.axvline(treasury_futures["log_returns"].mean(), color = "yellow", linestyle = "dotted", linewidth = 3, label = "Daily mean return")
+
+# add some features to the histogram
+plt.title("Histogram of Treasury Futures Logarithmic Returns")
+plt.xlabel("Logarithmic returns")
+plt.ylabel("Frequency = log")
+plt.yscale("log")
+# format y-axis labels as integers
+plt.gca().yaxis.set_major_formatter(tkr.StrMethodFormatter("{x:,.0f}"))
+
+# finalize the plot
+plt.legend()
+plt.show()
