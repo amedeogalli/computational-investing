@@ -1,0 +1,20 @@
+# import the needed libraries
+import numpy as np
+import pandas as pd
+import yfinance as yf
+
+# download S&P500 futures prices and compute the logarithmic returns
+sp500 = yf.download("ES=F")["Adj Close"]
+sp500["log_returns"] = np.log(sp500).diff().dropna()
+
+# annualize returns and standard deviation
+sp500_mean_ret = sp500["log_returns"].mean() * 252
+sp500_std = sp500["log_returns"].std() * np.sqrt(252)
+
+sp500_start_date = str(sp500.index[0])[:10]
+riskfree_rate_series = yf.download('^IRX', start=sp500_start_date)['Adj Close']
+riskfree_rate_mean = riskfree_rate_series.mean() / 100
+
+# compute the sharpe ratio
+sharpe_ratio = (sp500_mean_ret - riskfree_rate_mean) / sp500_std
+print(f"The Sharpe Ratio is: {sharpe_ratio}")
