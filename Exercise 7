@@ -1,0 +1,30 @@
+# import the needed libraries
+import numpy as np
+import pandas as pd
+import yfinance as yf
+
+# download data on BlackRock stock and on S&P500
+blk = yf.download("BLK")["Adj Close"]
+sp500 = yf.download("ES=F")["Adj Close"]
+
+# calculate the lates starting date
+blk_start_date = blk.index[0]
+sp500_start_date = sp500.index[0]
+latest_starting_date = max(blk_start_date, sp500_start_date)
+
+# make sure to utilize the latest starting data
+blk = blk.loc[latest_starting_date:]
+sp500 = sp500.loc[latest_starting_date:]
+
+# compute daily returns
+blk["log_returns"] = np.log(blk).diff()
+sp500["log_returns"] = np.log(sp500/sp500.shift(1))
+
+# calculate the excess return
+excess_return = blk["log_returns"] - sp500["log_returns"]
+
+# annualize excess return and compute the Information Ratio
+annual_excess_return = excess_return.mean() * 252
+tracking_error = excess_return.std() * np.sqrt(252)
+information_ratio = annual_excess_return / tracking_error
+print(f"The Information Ratio measuring BlackRock against the S&P500 Index is {information_ratio}")
