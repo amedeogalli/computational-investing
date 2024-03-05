@@ -1,0 +1,30 @@
+# import the needed libraries
+import numpy as np
+import pandas as pd
+import yfinance as yf
+import matplotlib.pyplot as plt
+
+
+# download treasury futures data
+treasury_futures = yf.download("ZN=F")
+
+# compute daily logarithmic returns and drop any NaN
+treasury_futures["log_returns"] = np.log(treasury_futures["Adj Close"] / treasury_futures["Adj Close"].shift(1))
+log_returns = treasury_futures["log_returns"]
+
+# compute cumulative returns
+treasury_futures["cumulative_returns"] = np.exp(log_returns.cumsum()) - 1
+
+# compute ongoing drowdown
+rolling_max = treasury_futures["cumulative_returns"].cummax()
+treasury_futures["drawdown"] = rolling_max - treasury_futures["cumulative_returns"]
+
+# plot the drawdown
+fig, ax = plt.subplots()
+ax.fill_between(treasury_futures.index, treasury_futures["drawdown"], color = "aqua", alpha = 0.3)
+ax.plot(treasury_futures["cumulative_returns"], label = "Cumulative Returns")
+ax.set_title("Cumulative Returns and Ongoing Drawdown")
+ax.set_xlabel("Date")
+ax.set_ylabel("Returns/Drawdown")
+ax.legend()
+plt.show()
