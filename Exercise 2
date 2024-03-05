@@ -1,0 +1,15 @@
+# import the needed libraries
+import numpy as np
+import pandas as pd
+import yfinance as yf
+
+# download  the futures price of gold commodity
+gold_futures = yf.download('GC=F')
+
+# compute the daily logarithmic returns for gold futures
+gold_futures["log_returns"] = np.log(gold_futures["Adj Close"]).diff()
+
+# compute the volatility of gold logarithmic returns and annualize it
+gold_annualized_volatility = gold_futures["log_returns"].std() * np.sqrt(252)
+
+print(f'Gold Annualized Volatility: {gold_annualized_volatility}')
