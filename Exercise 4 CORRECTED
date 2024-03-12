@@ -1,0 +1,56 @@
+# import the needed libraries
+import numpy as np
+import yfinance as yf
+import matplotlib.pyplot as plt
+import scipy.stats
+from scipy.stats import norm
+from scipy.stats import skew
+from scipy.stats import kurtosis
+
+# download treasury futures data
+treasury_futures = yf.download("ZN=F")
+
+# compute daily logarithmic returns and drop any NaN
+treasury_futures["log_returns"] = np.log(treasury_futures["Adj Close"] / treasury_futures["Adj Close"].shift(1)).dropna()
+log_returns = treasury_futures["log_returns"].fillna(0)
+
+# compute mean and standard deviation of returns
+treasury_mean = log_returns.mean()
+treasury_std = log_returns.std()
+
+# generate a range of values for the normal distribution
+number_bins = int(max(log_returns) - min(log_returns)*10000)
+norm_dist = np.linspace(min(log_returns), max(log_returns),number_bins)
+
+# compute the normal distribution curve
+norm_curve = norm.pdf(norm_dist, treasury_mean, treasury_std)
+
+# plot the histogram and the normal distribution
+plt.hist(log_returns, bins = number_bins, color = "orange", label = "Actual Distribution")
+plt.plot(norm_dist, norm_curve, color = "blue", linewidth = 2.5, linestyle = "dashdot", label = "Normal Distribution")
+# my error was not listing norm_dist as a parameter of the function plt.plot :/
+
+# add vertical lines for mean and standard deviations
+plt.axvline(treasury_mean, color = "purple", linewidth = 1.5, linestyle = "dashed", label = "Daily Mean Return")
+for i in range(1,3):
+  plt.axvline(treasury_mean + i * treasury_std, color ="green", linewidth = 1.5, linestyle = "dashed", label = f"+{i} std")
+  plt.axvline(treasury_mean - i * treasury_std, color ="red", linewidth = 1.5, linestyle = "dashed", label = f"-{i} std")
+
+# finalize the plot
+plt.title("Treasury Futures Logarithmic Returns vs Normal Distribution")
+plt.xlabel("Logarithmic Returns")
+plt.ylabel("Frequency/Density")
+plt.legend()
+plt.show()
+
+# calculate and print the measures of return and risk
+annualized_mean = treasury_mean * 252
+annualized_volatility = treasury_std * np.sqrt(252)
+skewness = skew(log_returns, bias = True)
+kurtosis = kurtosis(log_returns, bias = True)
+
+print(f"Annualized Mean: {annualized_mean}")
+print(f"Annualized Volatility: {annualized_volatility}")
+print(f"Skewness: {skewness}")
+print(f"Kurtosis: {kurtosis}")
+   
